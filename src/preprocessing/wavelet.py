@@ -4,26 +4,32 @@ import numpy as np
 
 def wavelet_denoise(signal):
 
-    coeff = pywt.wavedec(
+    coeffs = pywt.wavedec(
         signal,
-        'db4',
-        level=3
+        wavelet="db4",
+        level=4
     )
 
-    threshold = np.std(coeff[-1])
+    sigma = np.median(
+        np.abs(coeffs[-1])
+    ) / 0.6745
 
-    coeff[1:] = [
+    threshold = sigma * np.sqrt(
+        2 * np.log(len(signal))
+    )
+
+    coeffs[1:] = [
         pywt.threshold(
             c,
             threshold,
-            mode='soft'
+            mode="soft"
         )
-        for c in coeff[1:]
+        for c in coeffs[1:]
     ]
 
     reconstructed = pywt.waverec(
-        coeff,
-        'db4'
+        coeffs,
+        "db4"
     )
 
     return reconstructed[:len(signal)]
